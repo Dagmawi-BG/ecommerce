@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: head('Your Cart')}"></head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<main class="container my-4">
+    <h1 class="mb-4">Your Cart</h1>
+
+    <div th:if="${#lists.isEmpty(cart.items)}" class="alert alert-info">
+        Your cart is empty. <a th:href="@{/products}">Browse products</a>.
+    </div>
+
+    <div th:unless="${#lists.isEmpty(cart.items)}" class="row g-4">
+        <div class="col-lg-8">
+            <table class="table align-middle">
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th class="text-end">Unit price</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-end">Line total</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="line : ${cart.items}">
+                    <td th:text="${line.name}">Product</td>
+                    <td class="text-end" th:text="'$' + ${line.unitPrice}">$0.00</td>
+                    <td class="text-center" th:text="${line.quantity}">1</td>
+                    <td class="text-end" th:text="'$' + ${line.lineTotal}">$0.00</td>
+                    <td class="text-end">
+                        <form th:action="@{/cart/items/{id}/remove(id=${line.productId})}" method="post">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Summary</h2>
+
+                    <!-- Coupon -->
+                    <form th:action="@{/cart/coupon}" method="post" class="input-group input-group-sm my-3">
+                        <input type="text" name="code" class="form-control"
+                               placeholder="Coupon code" th:value="${cart.couponCode}">
+                        <button class="btn btn-outline-primary" type="submit">Apply</button>
+                    </form>
+                    <div class="text-danger small mb-2" th:if="${couponError}" th:text="${couponError}"></div>
+                    <div class="text-success small mb-2" th:if="${cart.couponCode}">
+                        Coupon <strong th:text="${cart.couponCode}">CODE</strong> applied.
+                    </div>
+
+                    <dl class="row mb-0">
+                        <dt class="col-6">Subtotal</dt>
+                        <dd class="col-6 text-end" th:text="'$' + ${cart.subtotal}">$0.00</dd>
+
+                        <th:block th:if="${cart.discount != null and cart.discount.signum() > 0}">
+                            <dt class="col-6 text-success">Discount</dt>
+                            <dd class="col-6 text-end text-success" th:text="'-$' + ${cart.discount}">-$0.00</dd>
+                        </th:block>
+
+                        <dt class="col-6 fs-5">Total</dt>
+                        <dd class="col-6 text-end fs-5 fw-bold" th:text="'$' + ${cart.total}">$0.00</dd>
+                    </dl>
+
+                    <a th:href="@{/checkout}" class="btn btn-success w-100 mt-3">Proceed to checkout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

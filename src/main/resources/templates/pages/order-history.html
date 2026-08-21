@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: head('Order History')}"></head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<main class="container my-4">
+    <h1 class="mb-4">Order History</h1>
+
+    <div th:if="${#lists.isEmpty(orders)}" class="alert alert-info">
+        You have no orders yet.
+    </div>
+
+    <div th:each="order : ${orders}" class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-bold" th:text="${order.orderNumber}">ORD-...</span>
+            <span>
+                <span class="badge me-2"
+                      th:classappend="${order.status == 'PAID'} ? 'bg-success' : (${order.status == 'CANCELLED'} ? 'bg-danger' : 'bg-secondary')"
+                      th:text="${order.status}">PENDING</span>
+                <form th:if="${order.status == 'PENDING'}" class="d-inline"
+                      th:action="@{/orders/{n}/pay(n=${order.orderNumber})}" method="post">
+                    <button type="submit" class="btn btn-sm btn-success">Pay now</button>
+                </form>
+            </span>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm mb-2">
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-end">Unit</th>
+                    <th class="text-end">Subtotal</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="line : ${order.items}">
+                    <td th:text="${line.productName}">Name</td>
+                    <td class="text-center" th:text="${line.quantity}">1</td>
+                    <td class="text-end" th:text="'$' + ${line.unitPrice}">$0.00</td>
+                    <td class="text-end" th:text="'$' + ${line.subtotal}">$0.00</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="text-end text-muted small"
+                 th:if="${order.discountAmount != null and order.discountAmount.signum() > 0}">
+                Subtotal: $<span th:text="${order.subtotalAmount}">0.00</span>
+                &nbsp;·&nbsp; Discount (<span th:text="${order.couponCode}">CODE</span>):
+                -$<span th:text="${order.discountAmount}">0.00</span>
+            </div>
+            <div class="text-end fw-bold" th:text="'Total: $' + ${order.totalAmount}">Total: $0.00</div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

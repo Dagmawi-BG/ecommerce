@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: head('Products')}"></head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<main class="container my-4">
+    <h1 class="mb-4">Products</h1>
+
+    <!-- Search + category filter -->
+    <form th:action="@{/products}" method="get" class="row g-2 mb-4">
+        <div class="col-sm-6 col-md-5">
+            <input type="text" name="q" th:value="${q}" class="form-control"
+                   placeholder="Search products..." autocomplete="off"
+                   list="product-suggestions" id="product-search">
+            <datalist id="product-suggestions"></datalist>
+        </div>
+        <div class="col-sm-4 col-md-4">
+            <select name="category" class="form-select">
+                <option value="">All categories</option>
+                <option th:each="cat : ${categories}"
+                        th:value="${cat.slug}"
+                        th:text="${cat.name}"
+                        th:selected="${cat.slug == category}">Category</option>
+            </select>
+        </div>
+        <div class="col-sm-2 col-md-3 d-grid d-sm-block">
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a th:href="@{/products}" class="btn btn-outline-secondary"
+               th:if="${q != null or category != null}">Clear</a>
+        </div>
+    </form>
+
+    <p class="text-muted small" th:if="${totalItems > 0}">
+        <span th:text="${totalItems}">0</span> product(s) found
+    </p>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+        <div class="col" th:each="product : ${products}">
+            <div class="card h-100 shadow-sm">
+                <img th:if="${product.imageUrl}" th:src="${product.imageUrl}"
+                     class="card-img-top" alt="" style="object-fit: cover; height: 200px;">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title" th:text="${product.name}">Product name</h5>
+                    <p class="card-text text-muted small flex-grow-1" th:text="${product.description}">Description</p>
+                    <p class="fw-bold fs-5 mb-2" th:text="'$' + ${product.price}">$0.00</p>
+                    <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-primary btn-sm">View details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p th:if="${#lists.isEmpty(products)}" class="text-muted mt-4">No products match your search.</p>
+
+    <!-- Pager -->
+    <nav th:if="${totalPages > 1}" class="mt-4" aria-label="Product pages">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/products(q=${q}, category=${category}, page=${currentPage - 1})}">Previous</a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link"
+                   th:href="@{/products(q=${q}, category=${category}, page=${i})}"
+                   th:text="${i + 1}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/products(q=${q}, category=${category}, page=${currentPage + 1})}">Next</a>
+            </li>
+        </ul>
+    </nav>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/search.js}" defer></script>
+</body>
+</html>

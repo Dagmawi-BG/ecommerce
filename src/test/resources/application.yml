@@ -1,0 +1,62 @@
+# ============================================================================
+# TEST configuration. Shadows src/main/resources/application.yml on the test
+# classpath. Key difference: OAuth2 is configured with explicit endpoints
+# instead of issuer-uri, so the context loads WITHOUT contacting Keycloak.
+#
+#  - client provider: static endpoints (no OIDC discovery at startup)
+#  - resource server: jwk-set-uri builds a LAZY JwtDecoder (no startup fetch;
+#    tests authenticate via the jwt() post-processor, so no key is fetched)
+#
+# The 'local' profile is still activated so application-local.yml supplies the
+# DB password and client secret (kept out of source control).
+# ============================================================================
+spring:
+  profiles:
+    active: local
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ecommerce_db
+    username: ${DB_USERNAME:postgres}
+    # password comes from application-local.yml (local profile)
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            authorization-uri: http://localhost:8180/realms/ecommerce-realm/protocol/openid-connect/auth
+            token-uri: http://localhost:8180/realms/ecommerce-realm/protocol/openid-connect/token
+            jwk-set-uri: http://localhost:8180/realms/ecommerce-realm/protocol/openid-connect/certs
+            user-info-uri: http://localhost:8180/realms/ecommerce-realm/protocol/openid-connect/userinfo
+            user-name-attribute: preferred_username
+        registration:
+          keycloak:
+            client-id: ecommerce-store
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:test-secret}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
+            scope: openid, profile, email
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8180/realms/ecommerce-realm/protocol/openid-connect/certs
+
+# Injected by KeycloakSecurityConfig (@Value); required because this file
+# fully shadows the main application.yml on the test classpath.
+app:
+  post-logout-redirect-uri: http://localhost:8080/
+  checkout:
+    reservation-minutes: 15
+    release-scan-ms: 3600000     # effectively disable the scheduler during tests
+  stripe:
+    mock: true
+    secret-key: sk_test_dummy
+    webhook-secret: whsec_test

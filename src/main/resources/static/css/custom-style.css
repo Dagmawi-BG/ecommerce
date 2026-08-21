@@ -1,0 +1,14 @@
+/* Project-specific overrides on top of Bootstrap 5 */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+.card-title {
+    min-height: 2.5rem;
+}

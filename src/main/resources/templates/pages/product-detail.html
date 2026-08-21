@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: head(${product.name})}"></head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<main class="container my-4">
+    <a th:href="@{/products}" class="btn btn-link ps-0 mb-3">&larr; Back to products</a>
+    <div class="row g-4">
+        <div class="col-md-5">
+            <img th:if="${product.imageUrl}" th:src="${product.imageUrl}"
+                 class="img-fluid rounded" alt="">
+        </div>
+        <div class="col-md-7">
+            <h1 th:text="${product.name}">Product name</h1>
+            <p class="text-muted" th:text="'SKU: ' + ${product.sku}">SKU</p>
+            <p class="fs-4 fw-bold" th:text="'$' + ${product.price}">$0.00</p>
+            <p th:text="${product.description}">Description</p>
+            <p th:if="${product.stockQuantity > 0}" class="text-success">In stock</p>
+            <p th:unless="${product.stockQuantity > 0}" class="text-danger">Out of stock</p>
+
+            <form th:action="@{/cart/items}" method="post"
+                  class="d-flex gap-2 align-items-center mt-3">
+                <input type="hidden" name="productId" th:value="${product.id}">
+                <input type="number" name="quantity" value="1" min="1"
+                       class="form-control" style="width: 90px;">
+                <button type="submit" class="btn btn-primary"
+                        th:disabled="${product.stockQuantity == 0}">Add to cart</button>
+            </form>
+            <p class="text-muted small mt-2">You'll sign in at checkout.</p>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

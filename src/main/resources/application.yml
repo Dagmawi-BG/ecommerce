@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: ecommerce-store
+
+  # Load application-local.yml (git-ignored) which holds the Keycloak client secret.
+  profiles:
+    active: local
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ecommerce_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+
+  jpa:
+    # We own the schema via Flyway. Hibernate only checks entities match the tables.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  security:
+    oauth2:
+      # Web pages: Authorization Code login flow (browser -> Keycloak -> session)
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8180/realms/ecommerce-realm
+        registration:
+          keycloak:
+            client-id: ecommerce-store
+            client-secret: ${KEYCLOAK_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            scope: openid, profile, email
+      # REST API: validates Bearer JWTs on /api/**
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/ecommerce-realm
+
+server:
+  port: 8080
+
+# Post-logout landing page (used by the OIDC logout handler)
+app:
+  post-logout-redirect-uri: http://localhost:8080/
+  checkout:
+    reservation-minutes: 15      # how long a pending order holds its stock
+    release-scan-ms: 60000       # how often the scheduler scans for lapsed reservations
+  stripe:
+    mock: ${STRIPE_MOCK:true}    # true = no real Stripe calls (dev default)
+    secret-key: ${STRIPE_SECRET_KEY:sk_test_dummy}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_test}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
